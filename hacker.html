@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UEFI BIOS Utility - Hacker Matrix Edition</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            color: #00f260;
+        }
+
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.95;
+        }
+
+        .project-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            z-index: 3;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        .project-container.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* HEADER BIOS */
+        .bios-header {
+            height: 40px;
+            background: rgba(0, 15, 0, 0.9);
+            border-bottom: 2px solid #00f260;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 18px;
+            font-size: 13px;
+            color: #00f260;
+            box-shadow: 0 0 12px rgba(0, 242, 96, 0.25);
+            z-index: 10;
+        }
+
+        .bios-brand { font-weight: bold; letter-spacing: 1px; }
+        .active-project-badge {
+            background: #00f260;
+            color: #000;
+            padding: 2px 8px;
+            font-weight: bold;
+            font-size: 11px;
+            border-radius: 2px;
+        }
+
+        /* PROJECT 1 - MÀN HÌNH CHỌN */
+        #project-1 {
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .bios-split-screen {
+            flex: 1;
+            display: flex;
+            width: 100%;
+            height: calc(100% - 40px);
+            position: relative;
+        }
+
+        .divider {
+            width: 2px;
+            background: #00f260;
+            box-shadow: 0 0 10px #00f260;
+            z-index: 5;
+        }
+
+        .bios-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .pane-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: #00c84f;
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+        }
+
+        .bios-btn {
+            background: rgba(0, 20, 0, 0.8);
+            color: #00f260;
+            border: 2px solid #00f260;
+            padding: 16px 32px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 260px;
+            text-align: center;
+            letter-spacing: 2px;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 8px rgba(0, 242, 96, 0.2);
+        }
+
+        .bios-btn:hover {
+            background: #00f260;
+            color: #000;
+            box-shadow: 0 0 20px #00f260;
+            transform: scale(1.03);
+        }
+
+        .mock-terminal {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 380px;
+            background: #000;
+            border: 2px solid #00f260;
+            box-shadow: 0 0 25px rgba(0, 242, 96, 0.5);
+            z-index: 100;
+        }
+
+        .terminal-titlebar {
+            background: #002200;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            border-bottom: 1px solid #00f260;
+        }
+
+        .terminal-title { color: #00f260; font-size: 12px; font-weight: bold; }
+        .terminal-close-btn {
+            width: 22px; height: 22px; color: #00f260;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-weight: bold;
+        }
+        .terminal-close-btn:hover { background: #ff0000; color: #fff; }
+        .terminal-body {
+            padding: 30px 20px; color: #00f260; font-size: 20px;
+            font-weight: bold; text-align: center; letter-spacing: 2px;
+        }
+
+        .fix-screen {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 200; padding: 30px;
+            color: #00f260; font-size: 15px; line-height: 1.6;
+        }
+
+        /* P2 DASHBOARD */
+        .p2-dashboard {
+            display: none;
+            position: absolute;
+            top: 40px;
+            left: 0;
+            width: 100%;
+            height: calc(100% - 40px);
+            background: #000;
+            z-index: 300;
+        }
+
+        .dashboard-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .left-hacker-container {
+            flex: 1;
+            border-right: 2px solid #00f260;
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 10, 0, 0.95);
+            overflow: hidden;
+        }
+
+        .left-info-box {
+            border-bottom: 2px solid #00f260;
+            padding: 10px 14px;
+            font-size: 12px;
+            line-height: 1.5;
+            background: rgba(0, 22, 0, 0.95);
+            min-height: 110px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .info-row.visible { opacity: 1; }
+
+        .info-label { color: #00c84f; font-weight: bold; }
+        .info-val { color: #00f260; font-weight: bold; }
+
+        .left-hacker-code {
+            flex: 1;
+            padding: 12px;
+            font-size: 12px;
+            line-height: 1.45;
+            color: #00f260;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+
+        .right-screens {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-panel {
+            padding: 12px 15px;
+            background: rgba(0, 12, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .right-panel.visible { opacity: 1; }
+
+        .right-panel.top { flex: 1.5; border-bottom: 2px solid #00f260; }
+        .right-panel.bottom { flex: 1; }
+
+        .panel-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #000;
+            background: #00f260;
+            padding: 2px 8px;
+            width: fit-content;
+            letter-spacing: 1px;
+        }
+
+        .panel-content {
+            flex: 1;
+            border: 1px dashed rgba(0, 242, 96, 0.35);
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .quiz-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 100%;
+        }
+
+        .quiz-header {
+            font-weight: bold;
+            color: #00f260;
+            border-bottom: 1px solid rgba(0, 242, 96, 0.25);
+            padding-bottom: 4px;
+            font-size: 13px;
+        }
+
+        .quiz-question { font-size: 13px; font-weight: bold; color: #ffffff; line-height: 1.35; }
+        .quiz-options { display: flex; flex-direction: column; gap: 6px; }
+
+        .quiz-btn {
+            background: rgba(0, 30, 0, 0.85);
+            border: 1px solid #00f260;
+            color: #00f260;
+            padding: 7px 10px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .quiz-btn:hover { background: #00f260; color: #000; box-shadow: 0 0 8px #00f260; }
+        .quiz-feedback { font-weight: bold; font-size: 12px; height: 18px; display: none; }
+
+        .progress-combined-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 100%;
+            gap: 15px;
+        }
+
+        .circle-box {
+            position: relative;
+            width: 95px; height: 95px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .circle-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+        .circle-bg { fill: none; stroke: rgba(0, 242, 96, 0.15); stroke-width: 8; }
+        .circle-fill {
+            fill: none; stroke: #00f260; stroke-width: 8;
+            stroke-linecap: round; stroke-dasharray: 283; stroke-dashoffset: 283;
+            transition: stroke-dashoffset 0.5s ease-in-out;
+            filter: drop-shadow(0 0 5px #00f260);
+        }
+
+        .circle-text { position: absolute; font-size: 16px; font-weight: bold; color: #00f260; }
+
+        .linear-progress-side {
+            flex: 1; display: flex; flex-direction: column; gap: 8px; justify-content: center;
+        }
+
+        .progress-text-row { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; }
+        .progress-bar-container {
+            width: 100%; height: 18px; border: 1px solid #00f260; padding: 2px; background: #000;
+        }
+
+        .progress-bar-fill {
+            height: 100%; background: #00f260; width: 0%;
+            transition: width 0.4s ease-in-out; box-shadow: 0 0 10px #00f260;
+        }
+
+        .virus-alert-box {
+            border: 1px solid #ff3333; background: rgba(50, 0, 0, 0.35);
+            padding: 6px 10px; display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .virus-alert-title { color: #ff4d4d; font-size: 11px; font-weight: bold; }
+        .virus-count-red { color: #ff2222; font-size: 16px; font-weight: bold; text-shadow: 0 0 8px #ff0000; }
+
+        .patch-log-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 5px;
+        }
+
+        .patch-log-item {
+            font-size: 12px;
+            font-weight: bold;
+            color: #00f260;
+            line-height: 1.4;
+        }
+
+        .patch-log-item.error {
+            color: #ff3333;
+            text-shadow: 0 0 8px #ff0000;
+            font-size: 13px;
+        }
+
+        .process-now-btn {
+            display: none;
+            margin-top: 15px;
+            background: #ff0000;
+            color: #fff;
+            border: 2px solid #ff6666;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 0 15px #ff0000;
+            animation: pulse-red 1s infinite alternate;
+        }
+
+        @keyframes pulse-red {
+            0% { transform: scale(1); box-shadow: 0 0 10px #ff0000; }
+            100% { transform: scale(1.02); box-shadow: 0 0 22px #ff0000; }
+        }
+
+        /* CON TRỎ CHUỘT QUANG */
+        #virtual-mouse {
+            position: fixed;
+            top: 50%;
+            right: -150px;
+            width: 45px;
+            height: 55px;
+            z-index: 99999;
+            pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .mouse-pointer-svg {
+            width: 26px;
+            height: 26px;
+            filter: drop-shadow(0 0 2px rgba(0, 200, 80, 0.4));
+        }
+
+        .mouse-name-tag {
+            background: #00b341;
+            color: #000;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 1px 5px;
+            border-radius: 3px;
+            margin-top: 2px;
+            white-space: nowrap;
+            box-shadow: 0 0 4px rgba(0, 179, 65, 0.4);
+        }
+
+        #global-lock-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 99998; cursor: wait;
+        }
+
+        /* TERMINAL SWITCHER */
+        .switcher-launcher {
+            position: fixed; bottom: 12px; right: 12px;
+            width: 34px; height: 34px; background: #000;
+            border: 2px solid #00f260; color: #00f260;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 9999; font-weight: bold; font-size: 13px;
+        }
+
+        .switcher-launcher:hover { background: #00f260; color: #000; }
+
+        .switcher-terminal {
+            display: none; position: fixed; bottom: 52px; right: 12px;
+            width: 280px; height: 140px; background: #000;
+            border: 2px solid #00f260; z-index: 9999;
+            box-shadow: 0 0 20px rgba(0, 242, 96, 0.4);
+            flex-direction: column; overflow: hidden;
+        }
+
+        .switcher-header {
+            background: #001a00; height: 24px;
+            display: flex; align-items: center; justify-content: flex-end;
+            padding: 0 8px; border-bottom: 1px solid #00f260;
+        }
+
+        .switcher-close { cursor: pointer; color: #00f260; font-size: 12px; font-weight: bold; }
+        .switcher-close:hover { color: #ff0000; }
+        .switcher-body { flex: 1; padding: 8px; display: flex; flex-direction: column; }
+        .switcher-logs { flex: 1; overflow-y: auto; font-size: 11px; color: #00c84f; }
+        .switcher-input-line { display: flex; align-items: center; gap: 6px; color: #00f260; font-weight: bold; }
+        .switcher-input-line input {
+            background: transparent; border: none; outline: none;
+            color: #00f260; font-family: inherit; font-size: 12px; width: 100%;
+        }
+
+        /* CHECK FULLSCREEN 70% MODAL TERMINAL */
+        #check-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 999999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .check-modal-box {
+            width: 70vw;
+            height: 70vh;
+            background: #000;
+            border: 2px solid #00f260;
+            box-shadow: 0 0 40px rgba(0, 242, 96, 0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .check-modal-header {
+            background: #002200;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            border-bottom: 2px solid #00f260;
+        }
+
+        .check-modal-title {
+            color: #00f260;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .check-modal-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Nút Xóa bản ghi trong Modal */
+        .clear-logs-btn {
+            background: #ff0000;
+            color: #fff;
+            border: 1px solid #ff6666;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+            transition: all 0.2s;
+        }
+        .clear-logs-btn:hover {
+            background: #cc0000;
+            box-shadow: 0 0 12px #ff0000;
+        }
+
+        .check-modal-close {
+            background: transparent;
+            border: 1px solid #00f260;
+            color: #00f260;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .check-modal-close:hover {
+            background: #ff0000;
+            border-color: #ff0000;
+            color: #fff;
+        }
+
+        .check-modal-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            font-size: 13px;
+            color: #00f260;
+            line-height: 1.6;
+        }
+
+        /* PROJECT 3 (ADMIN SYSTEM PANEL) */
+        #project-3-container {
+            display: flex;
+            width: 100%;
+            height: calc(100% - 40px);
+            background: #000;
+        }
+
+        .p3-column {
+            flex: 1;
+            border-right: 2px solid #00f260;
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 10, 0, 0.95);
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .p3-column:last-child {
+            border-right: none;
+        }
+
+        .p3-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #000;
+            background: #00f260;
+            padding: 3px 8px;
+            width: fit-content;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .p3-survey-box {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .p3-q-group {
+            border: 1px dashed rgba(0, 242, 96, 0.4);
+            padding: 10px;
+            background: rgba(0, 20, 0, 0.5);
+        }
+
+        .p3-q-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .p3-opts {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .p3-opt-btn {
+            background: rgba(0, 30, 0, 0.8);
+            border: 1px solid #00f260;
+            color: #00f260;
+            padding: 6px 10px;
+            font-size: 12px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .p3-opt-btn:hover {
+            background: rgba(0, 242, 96, 0.2);
+        }
+
+        .p3-opt-btn.selected {
+            background: #00f260 !important;
+            color: #000 !important;
+            font-weight: bold;
+            box-shadow: 0 0 10px #00f260;
+        }
+
+        .p3-textarea-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .p3-textarea {
+            background: #000;
+            border: 1px solid #00f260;
+            color: #00f260;
+            padding: 8px;
+            font-family: inherit;
+            font-size: 12px;
+            resize: none;
+            height: 70px;
+            outline: none;
+        }
+
+        .p3-char-count {
+            font-size: 11px;
+            color: #00c84f;
+            text-align: right;
+        }
+
+        .p3-send-btn {
+            background: #00f260;
+            color: #000;
+            border: none;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            text-align: center;
+            letter-spacing: 1px;
+            box-shadow: 0 0 10px rgba(0, 242, 96, 0.5);
+            transition: all 0.2s;
+        }
+
+        .p3-send-btn:hover {
+            background: #00c84f;
+            box-shadow: 0 0 15px #00f260;
+        }
+
+        .p3-terminal-stream {
+            flex: 1;
+            padding: 10px;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #00f260;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column-reverse;
+            background: #000;
+            border: 1px solid rgba(0, 242, 96, 0.3);
+        }
+
+        .p3-status-log {
+            font-size: 12px;
+            color: #00f260;
+            line-height: 1.5;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .placeholder-project {
+            display: flex; justify-content: center; align-items: center;
+            height: calc(100% - 40px); background: rgba(0, 0, 0, 0.6);
+        }
+
+        .placeholder-title {
+            font-size: 36px; font-weight: bold; color: #00f260; text-shadow: 0 0 12px #00f260;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="global-lock-overlay"></div>
+
+    <!-- BẢNG MODAL 70% MÀN HÌNH KHI BẤM CHECK -->
+    <div id="check-modal-overlay">
+        <div class="check-modal-box">
+            <div class="check-modal-header">
+                <div class="check-modal-title">>_ SYSTEM CHECK - USER ACTIVITY AUDIT</div>
+                <div class="check-modal-actions">
+                    <button class="clear-logs-btn" onclick="clearAllAuditLogs()">XÓA TOÀN BỘ BẢN GHI</button>
+                    <div class="check-modal-close" onclick="closeCheckModal()">✕</div>
+                </div>
+            </div>
+            <div class="check-modal-body" id="check-modal-content">
+                <!-- Nội dung thông tin xác nhận user đã sử dụng sẽ hiện ở đây -->
+            </div>
+        </div>
+    </div>
+
+    <!-- CON TRỎ CHUỘT "QUANG" -->
+    <div id="virtual-mouse">
+        <svg class="mouse-pointer-svg" viewBox="0 0 100 100">
+            <path d="M 10 10 L 10 85 L 32 63 L 52 95 L 68 85 L 48 53 L 80 53 Z" 
+                  fill="#ffffff" stroke="#000000" stroke-width="7" stroke-linejoin="round"/>
+        </svg>
+        <div class="mouse-name-tag">Quang</div>
+    </div>
+
+    <canvas id="matrix-canvas"></canvas>
+
+    <!-- PROJECT 1 MAIN -->
+    <div id="project-1" class="project-container active">
+        <div class="bios-header">
+            <div class="bios-brand">SYSTEM RECOVERY BIOS v2.0</div>
+            <div class="active-project-badge">ADMIN</div>
+        </div>
+
+        <div class="bios-split-screen">
+            <div class="bios-pane">
+                <div class="pane-title">TÙY CHỌN 1</div>
+                <button class="bios-btn" onclick="executeFix()">SỬA LỖI</button>
+            </div>
+            <div class="divider"></div>
+            <div class="bios-pane">
+                <div class="pane-title">TÙY CHỌN 2</div>
+                <button class="bios-btn" onclick="triggerQuitWarning()">THOÁT</button>
+            </div>
+        </div>
+
+        <div id="quit-terminal" class="mock-terminal">
+            <div class="terminal-titlebar">
+                <div class="terminal-title">>_ PowerShell</div>
+                <div class="terminal-close-btn" onclick="closeQuitTerminal()">✕</div>
+            </div>
+            <div class="terminal-body">BẠN SỢ À.</div>
+        </div>
+
+        <div id="fix-screen" class="fix-screen">
+            <div id="fix-log"></div>
+        </div>
+
+        <!-- P2 DASHBOARD -->
+        <div id="p2-dashboard" class="p2-dashboard">
+            <div class="dashboard-layout">
+                <div class="left-hacker-container">
+                    <div class="left-info-box" id="left-info-box">
+                        <div class="info-row" id="info-row-1">
+                            <span class="info-label">HOST SYSTEM DATE:</span>
+                            <span class="info-val" id="live-host-date">--/--/---- --:--:--</span>
+                        </div>
+                        <div class="info-row" id="info-row-2">
+                            <span class="info-label">START DATE:</span>
+                            <span class="info-val">10/07/2026</span>
+                        </div>
+                        <div class="info-row" id="info-row-3">
+                            <span class="info-label">TARGET DATE:</span>
+                            <span class="info-val">03/09/2026</span>
+                        </div>
+                        <div class="info-row" id="info-row-4">
+                            <span class="info-label">System:</span>
+                            <span class="info-val">Bios/Firewall</span>
+                        </div>
+                        <div class="info-row" id="info-row-5">
+                            <span class="info-label">Admin:</span>
+                            <span class="info-val" id="admin-random-code">#9A@$8x!</span>
+                        </div>
+                    </div>
+                    
+                    <div id="hacker-stream" class="left-hacker-code"></div>
+                </div>
+
+                <div class="right-screens">
+                    <div class="right-panel top" id="panel-top">
+                        <div class="panel-title">SYSTEM VIRUS - SECURITY QUIZ</div>
+                        <div class="panel-content">
+                            <div class="quiz-container">
+                                <div class="quiz-header" id="quiz-progress-head">CÂU HỎI 1/10</div>
+                                <div class="quiz-question" id="quiz-question-text">Đang tải câu hỏi...</div>
+                                <div class="quiz-options" id="quiz-options-box"></div>
+                                <div class="quiz-feedback" id="quiz-feedback"></div>
+                                <div class="process-now-btn" id="process-now-btn" onclick="switchToProject3()">XỬ LÝ NGAY</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-panel bottom" id="panel-bottom">
+                        <div class="panel-title">VIRUS PURGE PROGRESS</div>
+                        <div class="panel-content">
+                            <div class="progress-combined-container">
+                                <div class="circle-box">
+                                    <svg class="circle-svg" viewBox="0 0 100 100">
+                                        <circle class="circle-bg" cx="50" cy="50" r="45"></circle>
+                                        <circle class="circle-fill" id="circle-progress-bar" cx="50" cy="50" r="45"></circle>
+                                    </svg>
+                                    <div class="circle-text" id="circle-percent-text">0%</div>
+                                </div>
+
+                                <div class="linear-progress-side">
+                                    <div class="progress-text-row">
+                                        <span>PURGE PROGRESS:</span>
+                                        <span id="linear-percent-text">0%</span>
+                                    </div>
+                                    <div class="progress-bar-container">
+                                        <div class="progress-bar-fill" id="linear-bar-fill"></div>
+                                    </div>
+
+                                    <div class="virus-alert-box">
+                                        <span class="virus-alert-title">DETECTED VIRUSES:</span>
+                                        <span class="virus-count-red" id="red-virus-count">10 / 10</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROJECT 2 PLACEHOLDER -->
+    <div id="project-2" class="project-container">
+        <div class="bios-header"><div class="bios-brand">SYSTEM RECOVERY BIOS v2.0</div><div class="active-project-badge">ADMIN</div></div>
+        <div class="placeholder-project"><div class="placeholder-title">PROJECT 2</div></div>
+    </div>
+
+    <!-- PROJECT 3 -->
+    <div id="project-3" class="project-container">
+        <div class="bios-header">
+            <div class="bios-brand">SYSTEM RECOVERY BIOS v3.0</div>
+            <div class="active-project-badge">ADMIN MANAGEMENT</div>
+        </div>
+        <div id="project-3-container">
+            <div class="p3-column">
+                <div class="p3-title">ĐIỀU KHIỂN & CẤU HÌNH HỆ THỐNG</div>
+                <div class="p3-survey-box">
+                    <div class="p3-q-group">
+                        <div class="p3-q-title">1. Em có muốn yêu anh dài lâu không?</div>
+                        <div class="p3-opts">
+                            <button class="p3-opt-btn" onclick="selectP3Option(0, 'Có', event)">A. Có</button>
+                            <button class="p3-opt-btn" onclick="selectP3Option(0, 'Không', event)">B. Không</button>
+                        </div>
+                    </div>
+
+                    <div class="p3-q-group">
+                        <div class="p3-q-title">2. Em sẽ kể cho anh những chuyện vui buồn để anh làm chỗ dựa chứ?</div>
+                        <div class="p3-opts">
+                            <button class="p3-opt-btn" onclick="selectP3Option(1, 'Có', event)">A. Có</button>
+                            <button class="p3-opt-btn" onclick="selectP3Option(1, 'Không', event)">B. Không</button>
+                        </div>
+                    </div>
+
+                    <div class="p3-q-group">
+                        <div class="p3-q-title">3. Em sẽ làm gì khi gặp anh?</div>
+                        <div class="p3-opts">
+                            <button class="p3-opt-btn" onclick="selectP3Option(2, 'ăn sạch và không để lại vụn', event)">A. ăn sạch và không để lại vụn</button>
+                            <button class="p3-opt-btn" onclick="selectP3Option(2, 'chê', event)">B. chê</button>
+                            <button class="p3-opt-btn" onclick="selectP3Option(2, 'bán', event)">C. bán</button>
+                            <button class="p3-opt-btn" onclick="selectP3Option(2, 'Đi vs 40p', event)">D. Đi vs 40p</button>
+                        </div>
+                    </div>
+
+                    <div class="p3-textarea-group">
+                        <div class="p3-q-title">Cảm giác của em khi đồng hành cùng anh là gì? (Tối đa 300 chữ):</div>
+                        <textarea id="p3-text-input" class="p3-textarea" maxlength="300" placeholder="Nhập cảm giác của em tại đây..." oninput="handleP3TextInput(event)"></textarea>
+                        <div class="p3-char-count"><span id="char-current">0</span>/300</div>
+                    </div>
+
+                    <button class="p3-send-btn" onclick="submitP3Survey()">THỰC THI LỆNH HỆ THỐNG</button>
+                </div>
+            </div>
+
+            <div class="p3-column">
+                <div class="p3-title">TIẾN TRÌNH THỰC THI ADMIN</div>
+                <div id="p3-terminal-stream" class="p3-terminal-stream"></div>
+                <div id="p3-status-log" class="p3-status-log"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="project-4" class="project-container"><div class="bios-header"><div class="bios-brand">SYSTEM RECOVERY BIOS v2.0</div><div class="active-project-badge">ADMIN</div></div><div class="placeholder-project"><div class="placeholder-title">PROJECT 4</div></div></div>
+    <div id="project-5" class="project-container"><div class="bios-header"><div class="bios-brand">SYSTEM RECOVERY BIOS v2.0</div><div class="active-project-badge">ADMIN</div></div><div class="placeholder-project"><div class="placeholder-title">PROJECT 5</div></div></div>
+
+    <!-- TERMINAL SWITCHER -->
+    <div class="switcher-launcher" onclick="toggleSwitcher()">>_</div>
+    <div id="switcher-terminal" class="switcher-terminal">
+        <div class="switcher-header"><span class="switcher-close" onclick="toggleSwitcher()">✕</span></div>
+        <div class="switcher-body">
+            <div id="switcher-logs" class="switcher-logs"></div>
+            <div class="switcher-input-line"><span>></span><input type="text" id="switcher-input" autocomplete="off" spellcheck="false"></div>
+        </div>
+    </div>
+
+    <script>
+        let hasUserInteracted = false;
+
+        /* MATRIX CANVAS */
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const chars = '01';
+        const fontSize = 15;
+        let columns = Math.floor(canvas.width / fontSize);
+        let drops = Array(columns).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00f260';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 33);
+
+        function triggerQuitWarning() { document.getElementById('quit-terminal').style.display = 'block'; }
+        function closeQuitTerminal() { document.getElementById('quit-terminal').style.display = 'none'; }
+
+        function executeFix() {
+            hasUserInteracted = true;
+            const fixScreen = document.getElementById('fix-screen');
+            const fixLog = document.getElementById('fix-log');
+            fixScreen.style.display = 'block';
+            
+            const logs = [
+                "Initializing System Override...",
+                "Bypass security protocols...",
+                "Clearing corrupted sectors...",
+                "Restoring Matrix core values...",
+                "SUCCESS: System repaired."
+            ];
+
+            fixLog.innerHTML = "";
+            logs.forEach((text, index) => {
+                setTimeout(() => {
+                    fixLog.innerHTML += `<div>> ${text}</div>`;
+                    if (index === logs.length - 1) {
+                        setTimeout(() => {
+                            fixScreen.style.display = 'none';
+                            startP2Dashboard();
+                        }, 1000);
+                    }
+                }, index * 400);
+            });
+        }
+
+        let hackerInterval = null;
+        function startP2Dashboard() {
+            document.getElementById('p2-dashboard').style.display = 'block';
+
+            for(let i = 1; i <= 5; i++) {
+                setTimeout(() => {
+                    document.getElementById(`info-row-${i}`).classList.add('visible');
+                }, i * 250);
+            }
+
+            setTimeout(() => {
+                document.getElementById('panel-top').classList.add('visible');
+            }, 1200);
+
+            setTimeout(() => {
+                document.getElementById('panel-bottom').classList.add('visible');
+            }, 1600);
+
+            setInterval(() => {
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('vi-VN') + " " + now.toLocaleTimeString('vi-VN');
+                document.getElementById('live-host-date').textContent = dateStr;
+            }, 1000);
+
+            function generateAdminCode() {
+                const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+#$%";
+                let res = "";
+                for(let i=0; i<10; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
+                return res;
+            }
+            document.getElementById('admin-random-code').textContent = generateAdminCode();
+
+            const sampleCommands = [
+                "SYS_CHECK",
+                "CONNECT 192.168.1.102:8080 [ACK]",
+                "FETCH_HASH",
+                "INJECT_SOCKET_DATA_PACKET_STREAM_ID_9921_HEX:[0x99B3C8]",
+                "PING 10.0.88.1",
+                "TRACE_ROUTE 10.0.88.220 HEX:[0x179CAC] TIME:2564ms STATUS:OK",
+                "BYPASS_PORT",
+                "OVERRIDE_CORE_VARS_141 HEX:[0x4602AB] BUFFER_OVERFLOW_DETECTED",
+                "DECRYPT --KEY=215",
+                "CLEAR_CACHE",
+                "EXECUTE_KERNEL_PAYLOAD_DIRECT_MEM_ACCESS_0x7FFF8A53_SUCCESS",
+                "SCAN_IP"
+            ];
+
+            const stream = document.getElementById('hacker-stream');
+            if (!hackerInterval) {
+                hackerInterval = setInterval(() => {
+                    const randomCmd = sampleCommands[Math.floor(Math.random() * sampleCommands.length)];
+                    const line = document.createElement('div');
+                    line.textContent = `>System: ${randomCmd}`;
+                    stream.prepend(line);
+                    if (stream.children.length > 40) stream.removeChild(stream.lastChild);
+                }, 100);
+            }
+
+            loadCurrentQuestion();
+        }
+
+        const questions = [
+            { q: "1. Anh là một người vâm hay không?", options: ["A. Có, Vâm vãi luôn", "B. Gầy gò ốm yếu", "C. Bình thường không vâm", "D. Đủ cơ bắp"], correct: 0 },
+            { q: "2. Ngày em đã bật khóc lần đầu tiên là ngày nào?", options: ["A. 18.7.2026", "B. 15.8.2026", "C. 5.8.2026", "D. Không nhất thiết phải nhớ, hướng đến tương lai"], correct: 3 },
+            { q: "3. Em nghĩ anh yêu em thật lòng không?", options: ["A. Có, Luôn là vậy.", "B. Yêu qua đường", "C. Không chắc chắn lắm", "D. Bình thường thôi"], correct: 0 },
+            { q: "4. Theo em, anh có cảm thấy khó chịu khi chơi với em không?", options: ["A. khó chịu vãi", "B. ko muốn chơi", "C. chán", "D. Có cái dick."], correct: 3 },
+            { q: "5. Anh muốn gì từ em?", options: ["A. Lãng mạn", "B. Lâu dài", "C. Thân Thể", "D. Tâm hồn ngốc"], correct: 3 },
+            { q: "6. Anh sẽ làm gì khi ngoại hình em ko được đẹp?", options: ["A. Húp và không để lại vụn", "B. Muốn sức khỏe em cải thiện hơn", "C. Kh quan tâm ngoại hình em", "D. cả 3 đáp án trên"], correct: 3 },
+            { q: "7. Anh mua cho em cây dù trong ngày sinh nhật vì?", options: ["A. Che chở qua một cách riêng.", "B. Đỡ nắng khi đi ngoài đường", "C. Khi trời mưa e sẽ luôn nhớ về anh để che chở", "D. Cả 3 đáp án trên"], correct: 3 },
+            { q: "8. Điều anh luôn mơ thấy là gì?", options: ["A. Em", "B. Niko niko niii", "C. negga", "D. ishow speed"], correct: 0 },
+            { q: "9. Anh muốn gặp em trực tiếp?", options: ["A. Có, và luôn vậy", "B. Có cái dick", "C. xấu chả thèm", "D. ko, vì bếu"], correct: 0 },
+            { q: "10. Anh có sẵn sàng cho tương lai ko?", options: ["A. Chưa, anh vẫn còn là sinh viên", "B. sẵn sàng", "C. Chắc rồi nhưng phải khi lo đc cho em", "D. Đếu"], correct: 2 }
+        ];
+
+        let currentQuestionIdx = 0;
+        let correctAnswersCount = 0;
+
+        function loadCurrentQuestion() {
+            if (currentQuestionIdx >= questions.length) {
+                runEndP2Sequence();
+                return;
+            }
+
+            const q = questions[currentQuestionIdx];
+            document.getElementById('quiz-progress-head').textContent = `CÂU HỎI ${currentQuestionIdx + 1}/10`;
+            document.getElementById('quiz-question-text').textContent = q.q;
+            document.getElementById('quiz-feedback').textContent = "";
+
+            const optionsBox = document.getElementById('quiz-options-box');
+            optionsBox.innerHTML = "";
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-btn';
+                btn.id = `quiz-btn-${idx}`;
+                btn.textContent = opt;
+                btn.onclick = () => checkAnswer(idx);
+                optionsBox.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIdx) {
+            hasUserInteracted = true;
+            const q = questions[currentQuestionIdx];
+            const feedback = document.getElementById('quiz-feedback');
+
+            if (selectedIdx === q.correct) {
+                correctAnswersCount++;
+                updateAllProgress();
+
+                const btns = document.querySelectorAll('.quiz-btn');
+                btns.forEach(b => b.disabled = true);
+
+                setTimeout(() => {
+                    currentQuestionIdx++;
+                    loadCurrentQuestion();
+                }, 300);
+
+            } else {
+                triggerQuangAssistant(q.correct);
+            }
+        }
+
+        function triggerQuangAssistant(correctIdx) {
+            const lockOverlay = document.getElementById('global-lock-overlay');
+            const virtualMouse = document.getElementById('virtual-mouse');
+            const targetBtn = document.getElementById(`quiz-btn-${correctIdx}`);
+
+            lockOverlay.style.display = 'block';
+
+            const rect = targetBtn.getBoundingClientRect();
+            const targetX = rect.left + rect.width / 2;
+            const targetY = rect.top + rect.height / 2;
+
+            virtualMouse.style.right = 'auto';
+            virtualMouse.style.left = `${targetX}px`;
+            virtualMouse.style.top = `${targetY}px`;
+
+            setTimeout(() => {
+                targetBtn.style.background = "#00f260";
+                targetBtn.style.color = "#000";
+
+                correctAnswersCount++;
+                updateAllProgress();
+
+                setTimeout(() => {
+                    virtualMouse.style.left = `${window.innerWidth + 150}px`;
+
+                    setTimeout(() => {
+                        lockOverlay.style.display = 'none';
+                        virtualMouse.style.right = '-150px';
+                        virtualMouse.style.left = 'auto';
+
+                        currentQuestionIdx++;
+                        loadCurrentQuestion();
+                    }, 500);
+                }, 600);
+
+            }, 800);
+        }
+
+        function updateAllProgress() {
+            const percent = Math.round((correctAnswersCount / 10) * 100);
+            const remainingViruses = 10 - correctAnswersCount;
+
+            document.getElementById('circle-percent-text').textContent = percent + "%";
+            const circleOffset = 283 - (283 * percent) / 100;
+            document.getElementById('circle-progress-bar').style.strokeDashoffset = circleOffset;
+
+            document.getElementById('linear-percent-text').textContent = percent + "%";
+            document.getElementById('linear-bar-fill').style.width = percent + "%";
+
+            document.getElementById('red-virus-count').textContent = `${remainingViruses} / 10`;
+        }
+
+        function runEndP2Sequence() {
+            document.getElementById('quiz-progress-head').textContent = "SYSTEM STATUS";
+            document.getElementById('quiz-question-text').style.display = "none";
+            document.getElementById('quiz-options-box').style.display = "none";
+            document.getElementById('quiz-feedback').style.display = "none";
+
+            const quizContainer = document.querySelector('.quiz-container');
+            
+            const logContainer = document.createElement('div');
+            logContainer.className = "patch-log-container";
+            quizContainer.insertBefore(logContainer, document.getElementById('process-now-btn'));
+
+            const patchSteps = [
+                { text: ">System: 1. Hệ thống đang vá lại lỗ hổng", duration: 1000 },
+                { text: ">System: 2. Hệ thống đang cập nhật", duration: 1000 },
+                { text: ">System: 3. Hệ thống đang thực hiện bản vá", duration: 1000 },
+                { text: ">System: 4. Hệ thống sắp hoàn thành bản vá", duration: 3000 },
+                { text: ">System: 5. Hệ thống phát hiện ra 3 lỗ hổng lớn với quy mô virus lớn!!!", duration: 2000, isError: true }
+            ];
+
+            let stepIdx = 0;
+
+            function runStep() {
+                if (stepIdx >= patchSteps.length) {
+                    document.getElementById('process-now-btn').style.display = 'block';
+                    return;
+                }
+
+                const currentStep = patchSteps[stepIdx];
+                const itemDiv = document.createElement('div');
+                itemDiv.className = "patch-log-item";
+                if (currentStep.isError) {
+                    itemDiv.classList.add('error');
+                }
+                itemDiv.textContent = currentStep.text;
+                logContainer.appendChild(itemDiv);
+
+                if (currentStep.isError) {
+                    setTimeout(() => {
+                        stepIdx++;
+                        runStep();
+                    }, currentStep.duration);
+                    return;
+                }
+
+                let dotsCount = 0;
+                const dotInterval = setInterval(() => {
+                    dotsCount = (dotsCount % 3) + 1;
+                    itemDiv.textContent = currentStep.text + ".".repeat(dotsCount);
+                }, 300);
+
+                setTimeout(() => {
+                    clearInterval(dotInterval);
+                    stepIdx++;
+                    runStep();
+                }, currentStep.duration);
+            }
+
+            runStep();
+        }
+
+        function switchToProject3() {
+            document.querySelectorAll('.project-container').forEach(el => el.classList.remove('active'));
+            document.getElementById('project-3').classList.add('active');
+            startP3Logic();
+        }
+
+        /* LOGIC PROJECT 3 */
+        let p3Answers = { q1: "", q2: "", q3: "", note: "" };
+        let p3Submitted = false;
+        let p3RunTimeout = null;
+        let p3RunInterval = null;
+        let previousInputLength = 0;
+
+        function appendP3TerminalLine(text) {
+            const p3Stream = document.getElementById('p3-terminal-stream');
+            const line = document.createElement('div');
+            line.textContent = text;
+            p3Stream.prepend(line);
+            if (p3Stream.children.length > 25) p3Stream.removeChild(p3Stream.lastChild);
+        }
+
+        function triggerP3TerminalRun() {
+            if (p3Submitted) return;
+
+            if (p3RunTimeout) clearTimeout(p3RunTimeout);
+            if (p3RunInterval) clearInterval(p3RunInterval);
+
+            const p3HackerCommands = [
+                "ADMIN_EXEC: SYNC_KERNEL_PARAMETERS...",
+                "KILL_PROCESS_ID: 9942 [CORE_DAEMON]",
+                "UPDATING_FIREWALL_RULES_PORT_4444",
+                "CLEANING_SYSTEM_REGISTRY_KEYS...",
+                "ISOLATING_SECURE_SUBNET_NODE",
+                "ANALYZING_ADMIN_INTEGRITY...",
+                "VALIDATING_ADMIN_PAYLOAD_BUFFER..."
+            ];
+
+            p3RunInterval = setInterval(() => {
+                const randomCmd = p3HackerCommands[Math.floor(Math.random() * p3HackerCommands.length)];
+                appendP3TerminalLine(`>AdminCore: ${randomCmd}`);
+            }, 120);
+
+            p3RunTimeout = setTimeout(() => {
+                clearInterval(p3RunInterval);
+                p3RunInterval = null;
+                appendP3TerminalLine(`>System: [ADMIN_IDLE_READY]`);
+            }, 1500);
+        }
+
+        function selectP3Option(questionIndex, value, evt) {
+            if (p3Submitted) return;
+            hasUserInteracted = true;
+
+            const qGroups = document.querySelectorAll('.p3-q-group');
+            const btns = qGroups[questionIndex].querySelectorAll('.p3-opt-btn');
+            btns.forEach(b => b.classList.remove('selected'));
+
+            if (evt && evt.target) {
+                evt.target.classList.add('selected');
+            }
+
+            if (questionIndex === 0) p3Answers.q1 = value;
+            if (questionIndex === 1) p3Answers.q2 = value;
+            if (questionIndex === 2) p3Answers.q3 = value;
+
+            appendP3TerminalLine(`>AdminConfig [Param ${questionIndex + 1}]: ${value}`);
+            triggerP3TerminalRun();
+        }
+
+        function handleP3TextInput(evt) {
+            if (p3Submitted) return;
+            hasUserInteracted = true;
+
+            const currentVal = evt.target.value;
+            const currentLen = currentVal.length;
+
+            document.getElementById('char-current').textContent = currentLen;
+
+            if (currentLen > previousInputLength) {
+                const lastChar = currentVal.charAt(currentLen - 1);
+                appendP3TerminalLine(`>AdminTypedChar: '${lastChar === ' ' ? 'SPACE' : lastChar}'`);
+                triggerP3TerminalRun();
+            }
+
+            previousInputLength = currentLen;
+            p3Answers.note = currentVal;
+        }
+
+        function startP3Logic() {}
+
+        function submitP3Survey() {
+            if (p3Submitted) return;
+            hasUserInteracted = true;
+
+            p3Answers.note = document.getElementById('p3-text-input').value;
+
+            const existingAudits = JSON.parse(localStorage.getItem('p3_admin_audit_data_list')) || [];
+            const auditData = {
+                id: existingAudits.length + 1,
+                timestamp: new Date().toLocaleString('vi-VN'),
+                answers: { ...p3Answers },
+                status: "Completed"
+            };
+            existingAudits.push(auditData);
+            localStorage.setItem('p3_admin_audit_data_list', JSON.stringify(existingAudits));
+
+            p3Submitted = true;
+            if (p3RunTimeout) clearTimeout(p3RunTimeout);
+            if (p3RunInterval) clearInterval(p3RunInterval);
+
+            document.querySelector('.p3-send-btn').disabled = true;
+            document.querySelector('.p3-send-btn').style.opacity = "0.5";
+            document.getElementById('p3-text-input').disabled = true;
+
+            const p3Status = document.getElementById('p3-status-log');
+            p3Status.innerHTML = "> System: Đã lưu bản ghi cấu hình vào Storage.<br>> System: Đang khởi chạy tiến trình hệ thống...";
+
+            let dotsCount = 0;
+            const dotsInterval = setInterval(() => {
+                dotsCount = (dotsCount % 3) + 1;
+                p3Status.innerHTML = `> System: Đang thực thi lệnh hệ thống${".".repeat(dotsCount)}<br>> System: Tối ưu hóa lõi phân vùng${".".repeat(dotsCount)}`;
+            }, 300);
+
+            setTimeout(() => {
+                clearInterval(dotsInterval);
+                p3Status.innerHTML = "> System: Complete!<br>> System: Đạt 100% - Đang chuyển hướng sang end.html...";
+
+                let currentPercent = 1;
+                const percentInterval = setInterval(() => {
+                    if (currentPercent < 40) {
+                        currentPercent += 3;
+                    } else if (currentPercent < 75) {
+                        currentPercent += 2;
+                    } else if (currentPercent < 100) {
+                        currentPercent += 1;
+                    }
+
+                    if (currentPercent >= 100) {
+                        currentPercent = 100;
+                        clearInterval(percentInterval);
+                        p3Status.innerHTML = `> System: PROGRESS 100% - CHUYỂN HƯỚNG NGAY...`;
+
+                        setTimeout(() => {
+                            window.location.href = 'end.html';
+                        }, 1000);
+
+                    } else {
+                        p3Status.innerHTML = `> System: Đang đồng bộ hệ thống... ${currentPercent}%`;
+                    }
+                }, 80);
+
+            }, 2500);
+        }
+
+        /* CHECK MODAL LOGIC */
+        function openCheckModal() {
+            renderCheckModalContent();
+            document.getElementById('check-modal-overlay').style.display = 'flex';
+        }
+
+        function renderCheckModalContent() {
+            const contentBox = document.getElementById('check-modal-content');
+            let htmlContent = `<div style="color: #ffff00; font-weight: bold; margin-bottom: 10px;">> === SYSTEM CHECK - USER ACTIVITY AUDIT LOGS ===</div>`;
+
+            const savedAudits = JSON.parse(localStorage.getItem('p3_admin_audit_data_list')) || [];
+
+            if (hasUserInteracted || savedAudits.length > 0) {
+                htmlContent += `
+                    <div style="margin-bottom: 10px;">
+                        <div style="color: #00f260; font-weight: bold; font-size: 14px; margin-bottom: 8px;">[STATUS]: TỔNG HỢP CÁC BẢN GHI HOẠT ĐỘNG (${savedAudits.length} bản ghi)</div>
+                `;
+
+                if (savedAudits.length > 0) {
+                    savedAudits.forEach((data, index) => {
+                        htmlContent += `
+                            <div style="border: 1px dashed rgba(0, 242, 96, 0.4); padding: 12px; margin-bottom: 10px; background: rgba(0,20,0,0.5);">
+                                <div style="color: #ffffff; font-weight: bold; border-bottom: 1px solid rgba(0,242,96,0.3); padding-bottom: 4px; margin-bottom: 6px;"># BẢN GHI SỐ ${index + 1}</div>
+                                <div style="color: #00c84f;">• Thời gian lưu: ${data.timestamp}</div>
+                                <div style="color: #00c84f;">• Yêu anh dài lâu: ${data.answers.q1 || 'Chưa chọn'}</div>
+                                <div style="color: #00c84f;">• Kể chuyện vui buồn: ${data.answers.q2 || 'Chưa chọn'}</div>
+                                <div style="color: #00c84f;">• Làm gì khi gặp: ${data.answers.q3 || 'Chưa chọn'}</div>
+                                <div style="color: #00f260; margin-top: 5px; word-break: break-all;">• Cảm giác đồng hành: "${data.answers.note || 'Không có'}"</div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    htmlContent += `<div style="color: #ffaa00; margin-top: 5px;">- Chưa có bản ghi nào được lưu trong bộ nhớ (LocalStorage).</div>`;
+                }
+
+                htmlContent += `</div>`;
+            } else {
+                htmlContent += `<div style="color: #ff3333; font-weight: bold;">> [CẢNH BÁO]: Người dùng CHƯA thực hiện tương tác hoặc sử dụng hệ thống!</div>`;
+            }
+
+            contentBox.innerHTML = htmlContent;
+        }
+
+        /* HÀM XÓA TOÀN BỘ BẢN GHI */
+        function clearAllAuditLogs() {
+            if (confirm("Bạn có chắc chắn muốn xóa toàn bộ bản ghi lịch sử không?")) {
+                localStorage.removeItem('p3_admin_audit_data_list');
+                renderCheckModalContent();
+            }
+        }
+
+        function closeCheckModal() {
+            document.getElementById('check-modal-overlay').style.display = 'none';
+        }
+
+        /* TERMINAL SWITCHER */
+        function toggleSwitcher() {
+            const term = document.getElementById('switcher-terminal');
+            if (term.style.display === 'flex') {
+                term.style.display = 'none';
+            } else {
+                term.style.display = 'flex';
+                document.getElementById('switcher-input').focus();
+            }
+        }
+
+        document.getElementById('switcher-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const inputVal = this.value.trim().toUpperCase();
+                this.value = '';
+                if (!inputVal) return;
+
+                const logs = document.getElementById('switcher-logs');
+                const match = /^P([1-5])$/.exec(inputVal);
+
+                if (inputVal === "CHECK") {
+                    logs.innerHTML += `<div style="color: #ffff00;">> Executing CHECK command... Opening 70% Terminal Modal.</div>`;
+                    openCheckModal();
+                } else if (match) {
+                    const projectNum = match[1];
+                    const targetProject = document.getElementById(`project-${projectNum}`);
+
+                    if (targetProject) {
+                        document.querySelectorAll('.project-container').forEach(el => el.classList.remove('active'));
+                        targetProject.classList.add('active');
+                        logs.innerHTML += `<div style="color: #00f260;">> System: Switched to P${projectNum}</div>`;
+                        if (projectNum === "3") startP3Logic();
+                    }
+                } else {
+                    logs.innerHTML += `<div style="color: #ff3333;">> System: COMMAND ERROR</div>`;
+                }
+                logs.scrollTop = logs.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,2057 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Window 11</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap'); /* Font kiểu máy tính cổ cho phần signal */
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      overflow: hidden;
+      background-color: #000;
+    }
+
+    /* MÀN HÌNH CẢNH BÁO THIẾT BỊ DI ĐỘNG */
+    #mobile-warning-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #0f172a;
+      z-index: 999999;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #ffffff;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .warning-icon {
+      font-size: 60px;
+      margin-bottom: 20px;
+    }
+
+    .warning-text {
+      font-size: 20px;
+      font-weight: 600;
+      color: #f87171;
+      line-height: 1.5;
+    }
+
+    /* 1. MÀN HÌNH KHỞI ĐỘNG CHUẨN WINDOWS 11 (ĐÃ CĂN CHỈNH TÂM TUYỆT ĐỐI) */
+    #boot-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #000000;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+    }
+
+    .win11-logo {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      width: 65px;
+      height: 65px;
+      margin-bottom: 50px;
+    }
+
+    .win11-logo div {
+      background-color: #0078d4;
+    }
+
+    .spinner-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 48px;
+      height: 48px;
+      position: relative;
+    }
+
+    .spinner {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .spinner div {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #ffffff;
+      border-radius: 50%;
+      animation: spinner-rotate 1.4s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    }
+
+    .spinner div:nth-child(1) { animation-delay: 0s; }
+    .spinner div:nth-child(2) { animation-delay: -0.12s; }
+    .spinner div:nth-child(3) { animation-delay: -0.24s; }
+    .spinner div:nth-child(4) { animation-delay: -0.36s; }
+    .spinner div:nth-child(5) { animation-delay: -0.48s; }
+
+    @keyframes spinner-rotate {
+      0% { transform: rotate(0deg) translate(20px) scale(1); }
+      100% { transform: rotate(360deg) translate(20px) scale(0.3); }
+    }
+
+    .boot-text-main {
+      margin-top: 35px;
+      font-size: 1.1rem;
+      color: #ffffff;
+      font-weight: 400;
+      letter-spacing: 0.3px;
+    }
+
+    .boot-text-sub {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: #a0a0a0;
+    }
+
+    /* 2. GIAO DIỆN DESKTOP */
+    #desktop {
+      width: 100%;
+      height: 100%;
+      background: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=3840&q=80') no-repeat center center/cover;
+      position: relative;
+      opacity: 0;
+      transition: opacity 1.2s ease;
+    }
+
+    .desktop-icons {
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      flex-wrap: wrap;
+      gap: 15px;
+      height: calc(100% - 70px);
+      width: max-content;
+    }
+
+    .icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      color: white;
+      font-size: 12px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+      cursor: pointer;
+      padding: 8px 4px;
+      border-radius: 6px;
+      width: 85px;
+      transition: background 0.2s;
+    }
+
+    .icon:hover {
+      background-color: rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(8px);
+    }
+
+    .icon-img {
+      width: 40px;
+      height: 40px;
+      margin-bottom: 5px;
+    }
+
+    /* 3. TASKBAR */
+    .taskbar {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 52px;
+      background: rgba(255, 255, 255, 0.68);
+      backdrop-filter: blur(25px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+    }
+
+    .taskbar-center {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tb-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .tb-btn:hover {
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .tb-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      width: 14px;
+      height: 3px;
+      background: #0078d4;
+      border-radius: 2px;
+    }
+
+    .tb-icon {
+      width: 26px;
+      height: 26px;
+    }
+
+    .system-tray {
+      position: absolute;
+      right: 15px;
+      bottom: 12px;
+      height: 52px;
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(25px);
+      border-radius: 14px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 500;
+      color: #1c1c1c;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 4. START MENU */
+    .start-menu {
+      position: absolute;
+      bottom: 74px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      width: 450px;
+      background: rgba(243, 243, 243, 0.9);
+      backdrop-filter: blur(30px);
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+      padding: 24px;
+      display: none;
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+      z-index: 999;
+    }
+
+    .start-menu.active {
+      display: block;
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .search-bar {
+      width: 100%;
+      padding: 10px 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      background: rgba(255, 255, 255, 0.8);
+      margin-bottom: 20px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .pinned-section h4 {
+      font-size: 13px;
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      text-align: center;
+    }
+
+    .app-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 11px;
+      color: #333;
+      cursor: pointer;
+      padding: 10px 4px;
+      border-radius: 8px;
+    }
+
+    .app-item:hover {
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .app-item img {
+      width: 34px;
+      height: 34px;
+      margin-bottom: 6px;
+    }
+
+    /* 5. CỬA SỔ DÙNG CHUNG */
+    .window {
+      position: absolute;
+      top: 50px;
+      left: 15%;
+      width: 70%;
+      height: 78%;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      z-index: 100;
+      min-width: 450px;
+      min-height: 320px;
+    }
+
+    .window.hidden {
+      display: none !important;
+    }
+
+    .window.maximized {
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: calc(100% - 70px) !important;
+      border-radius: 0;
+    }
+
+    .window-header {
+      background: #dee1e6;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .window-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 6px;
+      padding-left: 10px;
+    }
+
+    .tabs-container {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #e3e5e8;
+      padding: 6px 14px;
+      border-radius: 8px 8px 0 0;
+      font-size: 12px;
+      color: #494c4e;
+      cursor: pointer;
+      max-width: 180px;
+      width: 100%;
+    }
+
+    .tab.active {
+      background: #ffffff;
+      color: #1f1f1f;
+      font-weight: 500;
+    }
+
+    .tab-close {
+      margin-left: auto;
+      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+
+    .tab-close:hover {
+      background: #ccc;
+    }
+
+    .window-controls {
+      display: flex;
+      align-items: center;
+    }
+
+    .control-btn {
+      width: 46px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      color: #1c1c1c;
+    }
+
+    .control-btn:hover {
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    .control-btn.close-btn:hover {
+      background: #e81123;
+      color: white;
+    }
+
+    .chrome-nav-bar {
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .nav-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #5f6368;
+      font-size: 14px;
+    }
+
+    .nav-btn:hover {
+      background: #f1f3f4;
+    }
+
+    .address-bar {
+      flex: 1;
+      background: #f1f3f4;
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 13px;
+      border: 1px solid transparent;
+      outline: none;
+      color: #202124;
+    }
+
+    .window-content {
+      flex: 1;
+      position: relative;
+      background: #fff;
+    }
+
+    .chrome-placeholder {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      font-size: 18px;
+      font-weight: 500;
+      color: #666;
+    }
+
+    .system-info-container {
+      padding: 30px;
+      color: #1f1f1f;
+      background: #f9f9f9;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .system-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 25px;
+      border-bottom: 2px solid #e5e5e5;
+      padding-bottom: 15px;
+    }
+
+    .system-card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .system-card h3 {
+      font-size: 16px;
+      color: #0078d4;
+      margin-bottom: 15px;
+    }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 14px;
+    }
+
+    .spec-row:last-child {
+      border-bottom: none;
+    }
+
+    .spec-label {
+      font-weight: 600;
+      color: #555;
+    }
+
+    .spec-value {
+      font-weight: 700;
+      color: #111;
+    }
+
+    /* 6. THÔNG BÁO GMAIL POPUP */
+    #notification-popup {
+      position: absolute;
+      bottom: 75px;
+      right: 20px;
+      width: 340px;
+      background: rgba(243, 243, 243, 0.92);
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      z-index: 9999;
+      display: none;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+      cursor: pointer;
+    }
+
+    #notification-popup.show {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .notif-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 6px;
+    }
+
+    .notif-app-info {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      color: #202124;
+    }
+
+    .notif-body {
+      font-size: 13px;
+      color: #3c4043;
+      line-height: 1.4;
+    }
+
+    /* 7. CỬA SỔ GMAIL */
+    .gmail-modal-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: calc(100% - 70px);
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 99999;
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+    .gmail-modal-overlay.active {
+      display: flex;
+    }
+
+    .gmail-window-frame {
+      width: 90vw;
+      max-width: 950px;
+      height: 85vh;
+      max-height: 650px;
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid rgba(0,0,0,0.2);
+    }
+
+    .gmail-window-titlebar {
+      height: 38px;
+      background-color: #f1f3f4;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      border-bottom: 1px solid #e0e0e0;
+      user-select: none;
+    }
+
+    .gmail-window-titlebar .mac-controls {
+      display: flex;
+      gap: 8px;
+    }
+    .gmail-window-titlebar .mac-btn {
+      width: 12px; height: 12px; border-radius: 50%; display: inline-block; cursor: pointer;
+    }
+    .gmail-window-titlebar .mac-close { background-color: #ff5f56; }
+    .gmail-window-titlebar .mac-min { background-color: #ffbd2e; }
+    .gmail-window-titlebar .mac-max { background-color: #27c93f; }
+    .gmail-window-titlebar .window-title-text { font-size: 13px; font-weight: 600; color: #444; }
+
+    .gmail-body-inner {
+        flex: 1;
+        display: flex;
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        background-color: #ffffff;
+        flex-direction: column;
+    }
+
+    .gmail-header {
+        height: 50px;
+        background-color: #f6f8fc;
+        border-bottom: 1px solid #e0e0e0;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        justify-content: space-between;
+    }
+
+    .gmail-logo {
+        font-weight: bold;
+        color: #ea4335;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .gmail-main-layout {
+        flex: 1;
+        display: flex;
+        overflow: hidden;
+    }
+
+    .gmail-sidebar {
+        width: 200px;
+        background-color: #f6f8fc;
+        border-right: 1px solid #e0e0e0;
+        padding: 15px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .sidebar-item {
+        padding: 10px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        color: #444;
+        font-weight: bold;
+    }
+
+    .sidebar-item.active {
+        background-color: #c2e7ff;
+        color: #001d35;
+    }
+
+    .gmail-content {
+        flex: 1;
+        background-color: #ffffff;
+        overflow-y: auto;
+        position: relative;
+    }
+
+    .email-item {
+        display: flex;
+        align-items: center;
+        padding: 14px 20px;
+        border-bottom: 1px solid #f1f3f4;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .email-item:hover {
+        background-color: #f2f6fc;
+    }
+
+    .email-item.blurred {
+        opacity: 0.3;
+        filter: blur(1.5px);
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .email-item.highlight {
+        background-color: #e8f0fe;
+        font-weight: bold;
+    }
+
+    .email-sender { width: 150px; font-size: 14px; color: #202124; }
+    .email-subject { flex: 1; font-size: 14px; color: #3c4043; }
+    .email-date { width: 80px; text-align: right; font-size: 12px; color: #5f6368; }
+
+    .mail-view {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: #ffffff;
+        padding: 30px;
+        display: none;
+        flex-direction: column;
+        overflow-y: auto;
+        z-index: 10;
+    }
+
+    .mail-view.active { display: flex; }
+
+    .mail-title {
+        font-size: 22px;
+        color: #d97706;
+        font-weight: bold;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #fef3c7;
+        padding-bottom: 10px;
+    }
+
+    .mail-date-sub {
+        font-size: 14px;
+        color: #4b5563;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+
+    .mail-text-body {
+        font-size: 15px;
+        line-height: 1.6;
+        color: #1f2937;
+        white-space: pre-wrap;
+        margin-bottom: 20px;
+    }
+
+    .heart-icon {
+        color: #ef4444;
+        font-size: 18px;
+        display: inline-block;
+    }
+
+    .signature-block {
+        margin-top: 15px;
+        opacity: 0;
+        transition: opacity 1s ease;
+    }
+
+    .signature-block.show { opacity: 1; }
+
+    .sign-title { font-style: italic; font-size: 15px; color: #4b5563; }
+    .sign-name { font-weight: bold; font-size: 16px; color: #111827; margin-top: 2px; }
+
+    .doc-link-container {
+        margin-top: 20px;
+        opacity: 0;
+        transition: opacity 1s ease;
+    }
+
+    .doc-link-container.show { opacity: 1; }
+
+    .doc-link {
+        color: #2563eb;
+        text-decoration: underline;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* 8. CỬA SỔ MACBOOK POP-UP */
+    .mac-modal-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+        z-index: 999999;
+        display: none;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .mac-modal-overlay.active { display: flex; }
+
+    .mac-window {
+        width: 90vw;
+        max-width: 1000px;
+        height: 85vh;
+        max-height: 650px;
+        background-color: #1a1e36;
+        border-radius: 10px;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+        border: 1px solid #334155;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popUp {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    .mac-titlebar {
+        height: 38px;
+        background-color: #0f172a;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        border-bottom: 1px solid #1e293b;
+        user-select: none;
+    }
+
+    .mac-controls { display: flex; gap: 8px; }
+    .mac-btn { width: 12px; height: 12px; border-radius: 50%; display: inline-block; cursor: pointer; }
+    .mac-close { background-color: #ff5f56; }
+    .mac-min { background-color: #ffbd2e; }
+    .mac-max { background-color: #27c93f; }
+    .mac-title { color: #94a3b8; font-size: 13px; font-weight: bold; }
+
+    .mac-content {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+    }
+
+    #pinkGradientLayer {
+        position: absolute; 
+        bottom: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 0%;
+        background: linear-gradient(to top, #ff9bb3, #ffc0cb, #ffe4e1);
+        z-index: 1; 
+        transition: height 4s ease-in-out; 
+        pointer-events: none;
+    }
+
+    #virtualCursor {
+        position: absolute; 
+        top: 50%; 
+        left: -60px; 
+        width: 18px; 
+        height: 18px;
+        z-index: 9999; 
+        pointer-events: none;
+        transition: left 1.5s cubic-bezier(0.25, 1, 0.5, 1), top 1.5s cubic-bezier(0.25, 1, 0.5, 1);
+        opacity: 0; 
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); 
+        transform-origin: top left;
+    }
+    #virtualCursor.active { opacity: 1; }
+    #virtualCursor.click-anim { transform: scale(0.8); transition: transform 0.12s ease; }
+
+    .camera-viewport {
+        width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;
+        transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1); transform-origin: center center;
+        z-index: 10;
+    }
+
+    .stage-container {
+        position: relative; width: 100%; height: 100%; display: flex;
+        flex-direction: column; justify-content: center; align-items: center;
+        z-index: 5;
+    }
+
+    .mail-wrapper {
+        position: relative; width: 480px; height: 300px; display: flex;
+        justify-content: center; align-items: center; perspective: 1000px;
+        transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1); cursor: pointer;
+    }
+
+    .open-text {
+        margin-top: 25px; color: #ffffff; font-size: 15px; font-weight: bold;
+        text-shadow: 0 2px 5px rgba(0,0,0,0.6); transition: opacity 0.4s ease;
+    }
+
+    .envelope {
+        position: absolute; width: 100%; height: 100%; background: #f4d068;
+        border-radius: 12px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+        border: 2px solid #e0b034; transform-style: preserve-3d; z-index: 2;
+    }
+
+    .envelope-pocket {
+        position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
+        border-left: 240px solid #ebd073; border-right: 240px solid #ebd073;
+        border-bottom: 150px solid #dbc065; border-top: 150px solid transparent;
+        border-radius: 0 0 12px 12px; z-index: 5; pointer-events: none;
+    }
+
+    .envelope-flap {
+        position: absolute; top: 0; left: 0; width: 0; height: 0;
+        border-left: 240px solid transparent; border-right: 240px solid transparent;
+        border-top: 150px solid #e2b948; transform-origin: top;
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); z-index: 6;
+    }
+
+    .envelope-wax-seal {
+        position: absolute; top: 150px; left: 50%; transform: translate(-50%, -50%);
+        width: 44px; height: 44px; background: #d32f2f; border-radius: 50%;
+        border: 2px solid #8e0000; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+        display: flex; justify-content: center; align-items: center; color: #ffffff;
+        font-size: 18px; z-index: 7; transition: opacity 0.3s ease;
+    }
+
+    .card-login {
+        position: absolute; z-index: 3; width: 330px; background: #fffdf5;
+        border-radius: 12px; border: 2px dashed #d6ba90; padding: 20px 18px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); opacity: 0;
+        transform: translate(0, 20px) scale(0.6);
+        background-image: repeating-linear-gradient(#fffdf5, #fffdf5 27px, #e8dfcb 28px);
+        pointer-events: none;
+    }
+
+    .card-login.disabled-input { pointer-events: none !important; }
+    .letter-header { color: #b30000; font-size: 15px; font-weight: bold; margin-bottom: 10px; }
+    .login-form-card { display: flex; flex-direction: column; gap: 10px; }
+    .form-group-card { display: flex; align-items: center; position: relative; }
+    .form-group-card label { width: 80px; font-size: 12px; font-weight: bold; color: #333; }
+    .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
+    .form-group-card input {
+        width: 100%; padding: 6px 30px 6px 8px; border: 1px solid #ccc;
+        border-radius: 5px; outline: none; font-weight: bold; color: #000000;
+        background: rgba(255, 255, 255, 0.9); font-size: 12px;
+    }
+    .form-group-card input.error {
+        border-color: #d32f2f !important; background-color: #ffebee !important;
+        animation: shake 0.3s ease-in-out;
+    }
+    .eye-toggle {
+        position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+        cursor: pointer; user-select: none; display: flex; align-items: center;
+        justify-content: center; width: 20px; height: 20px; opacity: 0.7; z-index: 5;
+    }
+    .eye-toggle svg { width: 15px; height: 15px; fill: #555; }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-5px); }
+        40%, 80% { transform: translateX(5px); }
+    }
+
+    .form-actions-card { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .btn-submit { background-color: #b30000; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; }
+    .forgot-link { color: #00888e; font-size: 11px; text-decoration: underline; cursor: pointer; margin-left: auto; }
+    .login-msg-status { font-size: 11px; font-weight: bold; color: #2e7d32; display: none; }
+    .login-msg-status.show { display: inline-block; }
+    .card-wax-seal { position: absolute; bottom: -8px; right: -8px; width: 30px; height: 30px; background: #d32f2f; border-radius: 50%; border: 2px solid #8e0000; display: flex; justify-content: center; align-items: center; color: #ffffff; font-size: 14px; z-index: 10; }
+
+    .card-message {
+        position: absolute; z-index: 3; width: 330px; background: #fffdf5;
+        border-radius: 12px; border: 2px dashed #d6ba90; padding: 24px 18px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); opacity: 0;
+        transform: translate(0, 20px) scale(0.6);
+        background-image: repeating-linear-gradient(#fffdf5, #fffdf5 27px, #e8dfcb 28px);
+        pointer-events: none; display: flex; justify-content: center; align-items: center;
+    }
+    .message-text { color: #b30000; font-size: 14px; line-height: 22px; font-weight: bold; text-align: center; }
+
+    .camera-viewport.focus-right { transform: scale(1.2) translateX(-60px); transition: transform 2.5s cubic-bezier(0.25, 1, 0.5, 1); }
+    .camera-viewport.zoom-login { transform: scale(1.75) translateX(-130px); transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1) !important; }
+    .camera-viewport.zoom-out-slightly { transform: scale(1.4) translateX(-90px) !important; transition: transform 2s cubic-bezier(0.25, 1, 0.5, 1) !important; }
+    .camera-viewport.focus-left { transform: scale(1.05) translateX(50px); transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1); }
+
+    .stage-container.opened .envelope-flap { transform: rotateX(180deg); z-index: 1; }
+    .stage-container.opened .envelope-wax-seal, .stage-container.opened .open-text { opacity: 0; pointer-events: none; }
+    .stage-container.opened .card-login { animation: popRight 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards 0.3s; }
+
+    @keyframes popRight {
+        0% { opacity: 0; transform: translate(0, 20px) scale(0.6); z-index: 3; }
+        40% { opacity: 1; transform: translate(0, -180px) scale(0.85); z-index: 10; }
+        100% { opacity: 1; transform: translate(250px, 0px) scale(1) rotate(2deg); z-index: 10; pointer-events: auto; }
+    }
+
+    .stage-container.opened .mail-wrapper { transform: translateX(-180px) scale(0.75); }
+    .stage-container.shift-right .mail-wrapper { transform: translateX(100px) scale(0.75) !important; }
+    .stage-container.pop-card2 .card-message { animation: popLeft 1.4s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+
+    @keyframes popLeft {
+        0% { opacity: 0; transform: translate(0, 20px) scale(0.6); z-index: 3; }
+        40% { opacity: 1; transform: translate(0, -180px) scale(0.85); z-index: 10; }
+        100% { opacity: 1; transform: translate(-250px, 0px) scale(1) rotate(-2deg); z-index: 10; pointer-events: auto; }
+    }
+
+    /* TRÁI TIM BAY */
+    .floating-heart {
+        position: fixed;
+        color: #ff3366;
+        z-index: 999999999 !important;
+        user-select: none;
+        pointer-events: none;
+        animation: floatUpHeart linear forwards;
+        filter: drop-shadow(0 2px 6px rgba(255, 51, 102, 0.6));
+    }
+
+    @keyframes floatUpHeart {
+        0% { transform: translateY(105vh) scale(0.5) rotate(0deg); opacity: 0; }
+        15% { opacity: 0.95; }
+        50% { transform: translateY(50vh) scale(1.3) rotate(15deg); }
+        85% { opacity: 0.9; }
+        100% { transform: translateY(-80px) scale(1) rotate(-15deg); opacity: 0; }
+    }
+
+    /* --- MÀN HÌNH SIGNAL INTERRUPTED --- */
+    #signal-interrupted-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: #0b0b0b;
+      background-image: radial-gradient(circle, rgba(20,20,20,0.8) 0%, rgba(0,0,0,0.95) 100%);
+      z-index: 9999999999;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: 'VT323', monospace, sans-serif;
+      overflow: hidden;
+    }
+
+    #signal-interrupted-screen.active {
+      display: flex;
+    }
+
+    #signal-interrupted-screen::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: url('https://media.giphy.com/media/oEI9uBYSzLpBK/giphy.gif');
+      opacity: 0.08;
+      pointer-events: none;
+    }
+
+    .signal-title {
+      font-size: 3.5rem;
+      font-weight: bold;
+      color: #ff2a4d;
+      letter-spacing: 4px;
+      text-shadow: 2px 2px 0px #00ffff, -2px -2px 0px #ff0055;
+      margin-bottom: 15px;
+      animation: glitchText 0.3s infinite;
+      text-align: center;
+    }
+
+    .signal-status {
+      font-size: 1.8rem;
+      color: #00ff66;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(0, 255, 102, 0.6);
+      border: 1px dashed #00ff66;
+      padding: 8px 20px;
+      background: rgba(0, 255, 102, 0.05);
+    }
+
+    @keyframes glitchText {
+      0% { transform: translate(0); }
+      20% { transform: translate(-2px, 2px); }
+      40% { transform: translate(-2px, -2px); }
+      60% { transform: translate(2px, 2px); }
+      80% { transform: translate(2px, -2px); }
+      100% { transform: translate(0); }
+    }
+
+    /* --- MÀN HÌNH TẮT ĐEN 3 GIÂY --- */
+    #blackout-screen {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #000000;
+      z-index: 10000000000;
+      display: none;
+    }
+    #blackout-screen.active {
+      display: block;
+    }
+
+    /* --- CỬA SỔ BIOS Ở TRUNG TÂM (ĐÃ PHỤC HỒI NỀN ĐEN VÀ HIỆN ĐỦ GIAO DIỆN 0-100%) --- */
+    #bios-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #000000;
+      z-index: 10000000001;
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+    #bios-modal-overlay.active {
+      display: flex;
+    }
+
+    .bios-window {
+      width: 500px;
+      background: #0000aa; 
+      border: 3px solid #ffffff;
+      box-shadow: 0 10px 40px rgba(0, 255, 255, 0.4);
+      font-family: 'Courier New', Courier, monospace;
+      color: #ffffff;
+      border-radius: 4px;
+      overflow: hidden;
+      display: block;
+    }
+
+    .bios-titlebar {
+      background: #aaaaaa;
+      color: #000000;
+      font-weight: bold;
+      padding: 6px 12px;
+      font-size: 14px;
+      text-align: left;
+    }
+
+    .bios-body {
+      padding: 30px 20px;
+      text-align: center;
+    }
+
+    .bios-body p {
+      font-size: 16px;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+
+    .bios-progress-bar {
+      width: 100%;
+      height: 24px;
+      border: 2px solid #ffffff;
+      background: #000000;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bios-progress-fill {
+      height: 100%;
+      background: #ffffff;
+      width: 0%;
+      transition: width 0.05s linear;
+    }
+
+    .bios-percent-text {
+      margin-top: 15px;
+      font-size: 18px;
+      color: #ffff00;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. MÀN HÌNH SIGNAL INTERRUPTED -->
+  <div id="signal-interrupted-screen">
+      <div class="signal-title">SIGNAL INTERRUPTED</div>
+      <div class="signal-status">OVERRIDING SYSTEM: <span id="signal-percent">1%</span></div>
+  </div>
+
+  <!-- 2. MÀN HÌNH ĐEN 3 GIÂY -->
+  <div id="blackout-screen"></div>
+
+  <!-- 3. CỬA SỔ BIOS Ở TRUNG TÂM -->
+  <div id="bios-modal-overlay">
+      <div class="bios-window" id="biosWindowBox">
+          <div class="bios-titlebar">BIOS</div>
+          <div class="bios-body">
+              <p>Đang vào thiết lập cài đặt...</p>
+              <div class="bios-progress-bar">
+                  <div class="bios-progress-fill" id="biosFill"></div>
+              </div>
+              <div class="bios-percent-text" id="biosPercent">1%</div>
+          </div>
+      </div>
+  </div>
+
+  <!-- THÔNG BÁO CHO THIẾT BỊ DI ĐỘNG -->
+  <div id="mobile-warning-screen">
+    <div class="warning-icon">💻</div>
+    <div class="warning-text">Xin Vui Lòng Sử Dụng Laptop/Pc để web có thể chạy.</div>
+  </div>
+
+  <!-- 1. MÀN HÌNH KHỞI ĐỘNG CHUẨN WINDOWS 11 -->
+  <div id="boot-screen">
+    <div class="win11-logo">
+      <div></div><div></div>
+      <div></div><div></div>
+    </div>
+    <div class="spinner-container">
+      <div class="spinner">
+        <div></div><div></div><div></div><div></div><div></div>
+      </div>
+    </div>
+    <div class="boot-text-main" id="boot-text">Updating your system... <span id="boot-percent">0%</span></div>
+    <div class="boot-text-sub">Please keep your computer on</div>
+  </div>
+
+  <!-- 2. DESKTOP WINDOWS -->
+  <div id="desktop">
+    <div class="desktop-icons">
+      <div class="icon" onclick="openChrome()">
+        <img class="icon-img" src="https://img.icons8.com/color/48/chrome.png" alt="Chrome">
+        <span>Google Chrome</span>
+      </div>
+      <div class="icon" onclick="openSystemInfo()">
+        <img class="icon-img" src="https://img.icons8.com/color/48/settings.png" alt="Settings">
+        <span>Cấu Hình Máy</span>
+      </div>
+      <!-- Đã sửa onclick của icon Gmail trên Desktop thành hàm rỗng -->
+      <div class="icon" onclick="">
+        <img class="icon-img" src="https://img.icons8.com/color/48/gmail.png" alt="Gmail">
+        <span>Gmail</span>
+      </div>
+    </div>
+
+    <!-- START MENU -->
+    <div class="start-menu" id="start-menu">
+      <input type="text" class="search-bar" placeholder="Type here to search...">
+      <div class="pinned-section">
+        <h4>Pinned Apps</h4>
+        <div class="apps-grid">
+          <div class="app-item" onclick="openChrome()">
+            <img src="https://img.icons8.com/color/48/chrome.png" alt="Chrome">
+            <span>Chrome</span>
+          </div>
+          <div class="app-item" onclick="openSystemInfo()">
+            <img src="https://img.icons8.com/color/48/settings.png" alt="Cài đặt">
+            <span>Cấu Hình</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CỬA SỔ TRÌNH DUYỆT CHROME -->
+    <div class="window hidden" id="chrome-window">
+      <div class="window-header" id="chrome-drag-handle">
+        <div class="window-top-bar">
+          <div class="tabs-container">
+            <div class="tab active">
+              <span>Google Search</span>
+              <span class="tab-close">✕</span>
+            </div>
+          </div>
+          <div class="window-controls">
+            <div class="control-btn" onclick="minimizeWindow('chrome-window')">─</div>
+            <div class="control-btn" onclick="maximizeWindow('chrome-window')">☐</div>
+            <div class="control-btn close-btn" onclick="closeWindow('chrome-window', 'chrome-tb-btn')">✕</div>
+          </div>
+        </div>
+        <div class="chrome-nav-bar">
+          <div class="nav-btn" onclick="iframeGoBack()">◄</div>
+          <div class="nav-btn" onclick="iframeReload()">↻</div>
+          <input type="text" class="address-bar" id="chrome-address" value="https://www.google.com" onkeydown="handleAddressBar(event)">
+        </div>
+      </div>
+      <div class="window-content">
+        <div class="chrome-placeholder">chưa hoàn thiện</div>
+      </div>
+    </div>
+
+    <!-- CỬA SỔ CẤU HÌNH MÁY -->
+    <div class="window hidden" id="system-window">
+      <div class="window-header" id="system-drag-handle">
+        <div class="window-top-bar">
+          <div style="font-size: 13px; font-weight: 600; padding: 4px 10px; color: #333;">System Specifications</div>
+          <div class="window-controls">
+            <div class="control-btn" onclick="minimizeWindow('system-window')">─</div>
+            <div class="control-btn" onclick="maximizeWindow('system-window')">☐</div>
+            <div class="control-btn close-btn" onclick="closeWindow('system-window', 'system-tb-btn')">✕</div>
+          </div>
+        </div>
+      </div>
+      <div class="window-content">
+        <div class="system-info-container" style="display: flex; flex-direction: column; gap: 20px; justify-content: flex-start; align-items: stretch;">
+          <div class="system-header" style="margin-bottom: 0;">
+            <img src="https://img.icons8.com/color/64/descriptor.png" alt="Processor">
+            <div>
+              <h2>Monster Gaming Workstation</h2>
+              <p style="color: #666; font-size: 13px;">Windows 11 Pro Supercharged Edition</p>
+            </div>
+          </div>
+
+          <div class="system-card" style="margin-bottom: 0;">
+            <h3>⚡ Cấu Hình Phần Cứng (Hardware Specs)</h3>
+            <div class="spec-row">
+              <span class="spec-label">Bộ vi xử lý (CPU):</span>
+              <span class="spec-value">Intel Core i9-13900K @ 5.80 GHz (24 Cores / 32 Threads)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Card đồ họa (GPU):</span>
+              <span class="spec-value">NVIDIA GeForce RTX 5090 (32GB GDDR7 VRAM)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Bộ nhớ RAM:</span>
+              <span class="spec-value">64 GB DDR5 Bus 7200MHz Dual-Channel</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Ổ cứng (Storage):</span>
+              <span class="spec-value">4TB NVMe PCIe Gen 5 SSD (Read 12,000 MB/s)</span>
+            </div>
+          </div>
+
+          <div class="system-card" style="margin-bottom: 0;">
+            <h3>🖥 Thông Tin Màn Hình & Hệ Thống</h3>
+            <div class="spec-row">
+              <span class="spec-label">Độ phân giải hiển thị:</span>
+              <span class="spec-value">3840 x 2160 (4K UHD 240Hz)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Phiên bản OS:</span>
+              <span class="spec-value">Windows 11 Pro 64-bit (Build 22631.3007)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASKBAR -->
+    <div class="taskbar">
+      <div class="taskbar-center">
+        <div class="tb-btn" onclick="toggleStartMenu()">
+          <svg width="22" height="22" viewBox="0 0 87 87" fill="#0078d4">
+            <path d="M0 0h41.6v41.6H0zM45.4 0H87v41.6H45.4zM0 45.4h41.6V87H0zM45.4 45.4H87V87H45.4z"/>
+          </svg>
+        </div>
+        <div class="tb-btn" id="chrome-tb-btn" onclick="toggleWindowFromTaskbar('chrome-window', 'chrome-tb-btn')">
+          <img class="tb-icon" src="https://img.icons8.com/color/48/chrome.png" alt="Chrome">
+        </div>
+        <div class="tb-btn" id="system-tb-btn" onclick="toggleWindowFromTaskbar('system-window', 'system-tb-btn')">
+          <img class="tb-icon" src="https://img.icons8.com/color/48/settings.png" alt="Settings">
+        </div>
+        <!-- Đã sửa onclick của icon Gmail trên Taskbar thành hàm rỗng -->
+        <div class="tb-btn" onclick="">
+          <img class="tb-icon" src="https://img.icons8.com/color/48/gmail.png" alt="Gmail">
+        </div>
+      </div>
+    </div>
+
+    <!-- SYSTEM TRAY -->
+    <div class="system-tray" id="clock">12:00 PM</div>
+
+    <!-- POPUP THÔNG BÁO GMAIL -->
+    <div id="notification-popup" onclick="openGmailModal()">
+      <div class="notif-header">
+        <div class="notif-app-info">
+          <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#ea4335" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          Gmail • Bây giờ
+        </div>
+        <span style="cursor: pointer;" onclick="event.stopPropagation(); closeNotification()">✕</span>
+      </div>
+      <div class="notif-body">
+        <b>Có 1 tin nhắn mới</b><br>Bạn có 1 bức thư chúc mừng đặc biệt mới nhận! ✉️
+      </div>
+    </div>
+
+    <!-- CỬA SỔ GMAIL -->
+    <div class="gmail-modal-overlay" id="gmailModalOverlay">
+        <div class="gmail-window-frame">
+            <div class="gmail-window-titlebar">
+                <div class="mac-controls">
+                    <span class="mac-btn mac-close" onclick="closeGmailModal()"></span>
+                    <span class="mac-btn mac-min"></span>
+                    <span class="mac-btn mac-max"></span>
+                </div>
+                <div class="window-title-text">Hộp Thư Gmail & Chúc Mừng Sinh Nhật</div>
+                <div></div>
+            </div>
+
+            <div class="gmail-body-inner">
+                <div class="gmail-header">
+                    <div class="gmail-logo">
+                        <svg width="24" height="24" viewBox="0 0 24 24"><path fill="#ea4335" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                        Gmail
+                    </div>
+                    <div style="font-size: 13px; color: #666;">Hộp thư đến (1)</div>
+                </div>
+
+                <div class="gmail-main-layout">
+                    <div class="gmail-sidebar">
+                        <div class="sidebar-item active">Hộp thư đến</div>
+                        <div class="sidebar-item">Đã gửi</div>
+                        <div class="sidebar-item">Thư nháp</div>
+                    </div>
+
+                    <div class="gmail-content">
+                        <div id="emailList">
+                            <div class="email-item highlight" onclick="openGreetingMail()">
+                                <div class="email-sender">Bạn có 1 thư mới ✉️</div>
+                                <div class="email-subject">Bạn có 1 bức thư chúc mừng đặc biệt mới nhận!</div>
+                                <div class="email-date">03 tháng 9</div>
+                            </div>
+
+                            <div class="email-item blurred">
+                                <div class="email-sender">Google Security</div>
+                                <div class="email-subject">Cảnh báo bảo mật tài khoản...</div>
+                                <div class="email-date">01 tháng 9</div>
+                            </div>
+                            <div class="email-item blurred">
+                                <div class="email-sender">System Admin</div>
+                                <div class="email-subject">Cập nhật chính sách hệ thống mới...</div>
+                                <div class="email-date">28 tháng 8</div>
+                            </div>
+                            <div class="email-item blurred">
+                                <div class="email-sender">Newsletter</div>
+                                <div class="email-subject">Bản tin công nghệ hàng tuần...</div>
+                                <div class="email-date">20 tháng 8</div>
+                            </div>
+                        </div>
+
+                        <div class="mail-view" id="mailView">
+                            <div class="mail-title">Happy Birth Day Người Anh Yêu</div>
+                            <div class="mail-date-sub">3.9.2005 - 3.9.2026</div>
+                            <div class="mail-text-body" id="typedText"></div>
+                            
+                            <div class="signature-block" id="signatureBlock">
+                                <div class="sign-title">Ký tên: Quang</div>
+                                <div class="sign-name">Nguyễn Minh Quang</div>
+                            </div>
+
+                            <div class="doc-link-container" id="docLinkContainer">
+                                <span class="doc-link" onclick="openMacbookLobby()">
+                                    📁 Bấm vào Folder
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CỬA SỔ MACBOOK -->
+    <div class="mac-modal-overlay" id="macModal">
+        <div class="mac-window">
+            <div class="mac-titlebar">
+                <div class="mac-controls">
+                    <span class="mac-btn mac-close" onclick="closeMacbookLobby()"></span>
+                    <span class="mac-btn mac-min"></span>
+                    <span class="mac-btn mac-max"></span>
+                </div>
+                <div class="mac-title">AnhYeuEm</div>
+                <div></div>
+            </div>
+
+            <div class="mac-content">
+                <div id="pinkGradientLayer"></div>
+                <svg id="virtualCursor" viewBox="0 0 100 100">
+                    <path d="M10,10 L45,85 L60,55 L90,45 Z" fill="#ffffff" stroke="#000000" stroke-width="6" stroke-linejoin="round"/>
+                </svg>
+
+                <div class="camera-viewport" id="cameraViewport">
+                    <div class="stage-container" id="stageContainer">
+                        
+                        <div class="mail-wrapper" onclick="openEnvelope()">
+                            <div class="envelope">
+                                <div class="envelope-flap"></div>
+                                <div class="envelope-pocket"></div>
+                                <div class="envelope-wax-seal">❤</div>
+                            </div>
+
+                            <div class="card-login" id="cardLogin" onclick="event.stopPropagation();">
+                                <div class="letter-header">✉ Đăng Nhập</div>
+                                <form class="login-form-card" onsubmit="handleFormSubmit(event)">
+                                    <div class="form-group-card">
+                                        <label>Username:</label>
+                                        <div class="input-wrapper">
+                                            <input type="text" id="usernameInput" placeholder="Username..." autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="form-group-card">
+                                        <label>Password:</label>
+                                        <div class="input-wrapper">
+                                            <input type="password" id="passwordInput" placeholder="Password..." autocomplete="off">
+                                            <span class="eye-toggle" id="eyeToggle" onclick="togglePasswordVisibility()">
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                                                </svg>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-actions-card">
+                                        <button type="submit" class="btn-submit" id="btnLogin">Đăng nhập</button>
+                                        <span class="login-msg-status" id="loginMsgStatus"><span id="msgLabel">Mật Khẩu Đúng</span><span id="dotsSpan"></span></span>
+                                        <span class="forgot-link" id="forgotLink" onclick="handleForgotClick(event)">Quên mật khẩu?</span>
+                                    </div>
+                                </form>
+                                <div class="card-wax-seal">❤</div>
+                            </div>
+
+                            <div class="card-message" onclick="event.stopPropagation();">
+                                <p class="message-text" id="messageText"></p>
+                                <div class="card-wax-seal">❤</div>
+                            </div>
+                        </div>
+
+                        <div class="open-text">Bấm vào bức thư để mở</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  </div>
+
+  <script>
+    function checkDevice() {
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+      if (isMobile) {
+        document.getElementById('mobile-warning-screen').style.display = 'flex';
+      }
+    }
+    checkDevice();
+
+    const bootScreen = document.getElementById('boot-screen');
+    const bootPercent = document.getElementById('boot-percent');
+    const desktop = document.getElementById('desktop');
+
+    const duration = 3000;
+    const intervalTime = 40;
+    let elapsed = 0;
+
+    const bootTimer = setInterval(() => {
+      elapsed += intervalTime;
+      const percent = Math.min(Math.round((elapsed / duration) * 100), 100);
+      bootPercent.innerText = `${percent}%`;
+
+      if (elapsed >= duration) {
+        clearInterval(bootTimer);
+        bootScreen.style.opacity = '0';
+        bootScreen.style.transition = 'opacity 0.6s ease';
+        setTimeout(() => {
+          bootScreen.style.display = 'none';
+          desktop.style.opacity = '1';
+          setTimeout(() => {
+            showNotification();
+          }, 10000);
+        }, 600);
+      }
+    }, intervalTime);
+
+    function showNotification() {
+      const notif = document.getElementById('notification-popup');
+      notif.classList.add('show');
+    }
+
+    function closeNotification() {
+      const notif = document.getElementById('notification-popup');
+      notif.classList.remove('show');
+    }
+
+    function openGmailModal() {
+      closeNotification();
+      document.getElementById('gmailModalOverlay').classList.add('active');
+    }
+
+    function closeGmailModal() {
+      document.getElementById('gmailModalOverlay').classList.remove('active');
+    }
+
+    function toggleStartMenu() {
+      const startMenu = document.getElementById('start-menu');
+      startMenu.classList.toggle('active');
+    }
+
+    document.addEventListener('click', (e) => {
+      const startMenu = document.getElementById('start-menu');
+      const startBtn = document.querySelector('.tb-btn');
+      if (!startMenu.contains(e.target) && !startBtn.contains(e.target)) {
+        startMenu.classList.remove('active');
+      }
+    });
+
+    function updateClock() {
+      const now = new Date();
+      let hours = now.getHours();
+      let minutes = now.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      minutes = minutes < 10 ? '0' + minutes : minutes;
+      document.getElementById('clock').innerText = `${hours}:${minutes} ${ampm}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function openChrome() {
+      const chromeWin = document.getElementById('chrome-window');
+      const chromeTbBtn = document.getElementById('chrome-tb-btn');
+      chromeWin.classList.remove('hidden');
+      chromeTbBtn.classList.add('active');
+      document.getElementById('start-menu').classList.remove('active');
+    }
+
+    function openSystemInfo() {
+      const sysWin = document.getElementById('system-window');
+      const sysTbBtn = document.getElementById('system-tb-btn');
+      sysWin.classList.remove('hidden');
+      sysTbBtn.classList.add('active');
+      document.getElementById('start-menu').classList.remove('active');
+    }
+
+    function closeWindow(winId, tbBtnId) {
+      document.getElementById(winId).classList.add('hidden');
+      document.getElementById(tbBtnId).classList.remove('active');
+    }
+
+    function minimizeWindow(winId) {
+      document.getElementById(winId).classList.add('hidden');
+    }
+
+    function maximizeWindow(winId) {
+      document.getElementById(winId).classList.toggle('maximized');
+    }
+
+    function toggleWindowFromTaskbar(winId, tbBtnId) {
+      const win = document.getElementById(winId);
+      const btn = document.getElementById(tbBtnId);
+      if (win.classList.contains('hidden')) {
+        win.classList.remove('hidden');
+        btn.classList.add('active');
+      } else {
+        win.classList.add('hidden');
+      }
+    }
+
+    function handleAddressBar(e) {}
+    function iframeReload() {}
+    function iframeGoBack() {}
+
+    function makeWindowDraggable(handleId, winId) {
+      const handle = document.getElementById(handleId);
+      const win = document.getElementById(winId);
+      let isDragging = false;
+      let offsetX = 0, offsetY = 0;
+
+      handle.addEventListener('mousedown', (e) => {
+        if (e.target.classList.contains('control-btn') || e.target.classList.contains('address-bar')) return;
+        if (win.classList.contains('maximized')) return;
+
+        isDragging = true;
+        offsetX = e.clientX - win.offsetLeft;
+        offsetY = e.clientY - win.offsetTop;
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        win.style.left = (e.clientX - offsetX) + 'px';
+        win.style.top = (e.clientY - offsetY) + 'px';
+      });
+
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+    }
+
+    makeWindowDraggable('chrome-drag-handle', 'chrome-window');
+    makeWindowDraggable('system-drag-handle', 'system-window');
+
+    const textToType = "Dù hành trình chúng ta đồng hành cùng nhau chỉ mới gần 55 ngày, nhưng tình cảm và sự chân thành anh dành cho em chưa bao giờ là thoáng qua. Cảm ơn em vì đã đến, mang theo dịu dàng và thắp sáng những ngày tháng vừa qua của anh. Nhân ngày đặc biệt này, anh chỉ mong em luôn được bình an, ngập tràn hạnh phúc bên gia đình, những người thân yêu và thật trọn vẹn trong chính tình yêu của đôi mình... ";
+
+    function openGreetingMail() {
+        document.getElementById('mailView').classList.add('active');
+        let index = 0;
+        const typedTextElem = document.getElementById('typedText');
+        typedTextElem.innerHTML = "";
+
+        const timer = setInterval(() => {
+            typedTextElem.innerHTML += textToType[index];
+            index++;
+            if (index >= textToType.length) {
+                clearInterval(timer);
+                typedTextElem.innerHTML += '<span class="heart-icon">❤️</span>';
+                
+                setTimeout(() => {
+                    document.getElementById('signatureBlock').classList.add('show');
+                    setTimeout(() => {
+                        document.getElementById('docLinkContainer').classList.add('show');
+                    }, 800);
+                }, 500);
+            }
+        }, 50);
+    }
+
+    function openMacbookLobby() {
+        document.getElementById('macModal').classList.add('active');
+    }
+
+    function closeMacbookLobby() {
+        document.getElementById('macModal').classList.remove('active');
+    }
+
+    let isOpened = false;
+    let isCard2Popped = false;
+    let isSubmitting = false;
+    let heartSpawner = null;
+
+    function openEnvelope() {
+        if (isOpened) return;
+        isOpened = true;
+
+        document.getElementById('stageContainer').classList.add('opened');
+        setTimeout(() => {
+            document.getElementById('cameraViewport').classList.add('focus-right');
+        }, 300);
+    }
+
+    function handleForgotClick(e) {
+        if (e) e.preventDefault();
+        if (isCard2Popped) return;
+
+        const text = "Anh biết ngay là em sẽ quên mà<br>để anh ghi dùm cho nha ♥";
+        triggerCard2Sequence(text);
+    }
+
+    async function handleFormSubmit(e) {
+        if (e) e.preventDefault();
+        if (isSubmitting) return;
+
+        const userInput = document.getElementById('usernameInput');
+        const passwordInput = document.getElementById('passwordInput');
+        
+        const username = userInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        if (!isCard2Popped) {
+            let hasError = false;
+
+            if (!username) {
+                userInput.classList.add('error');
+                hasError = true;
+            }
+            if (!password) {
+                passwordInput.classList.add('error');
+                hasError = true;
+            }
+
+            if (hasError) {
+                setTimeout(() => {
+                    userInput.classList.remove('error');
+                    passwordInput.classList.remove('error');
+                }, 1000);
+                return;
+            }
+
+            const text = "Anh biết ngay là em sẽ kh nhớ mà<br>để anh ghi dùm cho nha ♥";
+            triggerCard2Sequence(text);
+        } else {
+            isSubmitting = true;
+
+            document.getElementById('forgotLink').style.display = 'none';
+
+            const msgStatus = document.getElementById('loginMsgStatus');
+            const dotsSpan = document.getElementById('dotsSpan');
+            const msgLabel = document.getElementById('msgLabel');
+            
+            msgStatus.classList.add('show');
+            msgLabel.textContent = "Mật Khẩu Đúng";
+
+            if (!heartSpawner) {
+                heartSpawner = setInterval(() => {
+                    createFullMatrixHeart();
+                }, 100);
+            }
+
+            const startTime = Date.now();
+            let dotCount = 1;
+
+            while (Date.now() - startTime < 4000) {
+                dotsSpan.textContent = '.'.repeat(dotCount);
+                dotCount = (dotCount % 3) + 1; 
+                await sleep(300);
+            }
+
+            msgLabel.textContent = "Đang Đăng Nhập ";
+            dotsSpan.textContent = "0%";
+
+            document.getElementById('pinkGradientLayer').style.height = '100%';
+            const camera = document.getElementById('cameraViewport');
+            camera.classList.remove('zoom-login');
+            camera.classList.add('zoom-out-slightly');
+
+            const percentDuration = 4000;
+            const percentSteps = 100;
+            const intervalTime = percentDuration / percentSteps;
+
+            for (let percent = 0; percent <= 100; percent++) {
+                dotsSpan.textContent = percent + '%';
+                await sleep(intervalTime);
+            }
+
+            await sleep(1500);
+            
+            if (heartSpawner) {
+                clearInterval(heartSpawner);
+                heartSpawner = null;
+            }
+            
+            triggerSignalInterruptedSequence();
+        }
+    }
+
+    async function triggerSignalInterruptedSequence() {
+        const signalScreen = document.getElementById('signal-interrupted-screen');
+        const signalPercent = document.getElementById('signal-percent');
+        const blackoutScreen = document.getElementById('blackout-screen');
+        const biosOverlay = document.getElementById('bios-modal-overlay');
+        const biosFill = document.getElementById('biosFill');
+        const biosPercent = document.getElementById('biosPercent');
+
+        signalScreen.classList.add('active');
+
+        for (let i = 1; i <= 60; i++) {
+            signalPercent.textContent = i + '%';
+            await sleep(50);
+        }
+
+        for (let i = 61; i <= 100; i++) {
+            signalPercent.textContent = i + '%';
+            await sleep(100);
+        }
+
+        await sleep(400);
+        signalScreen.classList.remove('active');
+        blackoutScreen.classList.add('active');
+
+        await sleep(3000);
+
+        blackoutScreen.classList.remove('active');
+        biosOverlay.classList.add('active');
+
+        for (let p = 1; p <= 100; p++) {
+            biosPercent.textContent = p + '%';
+            biosFill.style.width = p + '%';
+            await sleep(50);
+        }
+
+        await sleep(500);
+        window.location.href = "hacker.html";
+    }
+
+    function createFullMatrixHeart() {
+        const heart = document.createElement('div');
+        heart.classList.add('floating-heart');
+        heart.innerHTML = '❤';
+        
+        const size = Math.random() * 50 + 15;
+        heart.style.fontSize = size + 'px';
+        
+        const randomX = Math.random() * window.innerWidth;
+        heart.style.left = randomX + 'px';
+        
+        const duration = Math.random() * 1.5 + 2;
+        heart.style.animationDuration = duration + 's';
+
+        document.body.appendChild(heart);
+
+        setTimeout(() => {
+            heart.remove();
+        }, duration * 1000);
+    }
+
+    function triggerCard2Sequence(textHtml) {
+        isCard2Popped = true;
+
+        document.getElementById('cardLogin').classList.add('disabled-input');
+        document.getElementById('messageText').innerHTML = textHtml;
+
+        const camera = document.getElementById('cameraViewport');
+        const stage = document.getElementById('stageContainer');
+
+        camera.classList.remove('focus-right');
+        camera.classList.add('focus-left');
+        stage.classList.add('shift-right');
+
+        setTimeout(() => {
+            stage.classList.add('pop-card2');
+            setTimeout(() => {
+                startAutoCursorSequence();
+            }, 3000);
+        }, 550);
+    }
+
+    function togglePasswordVisibility() {
+        const passInput = document.getElementById('passwordInput');
+        passInput.type = passInput.type === 'password' ? 'text' : 'password';
+    }
+
+    function getRelativeCenterPosition(elem) {
+        const containerRect = document.querySelector('.mac-content').getBoundingClientRect();
+        const rect = elem.getBoundingClientRect();
+        return {
+            x: rect.left - containerRect.left + rect.width / 2,
+            y: rect.top - containerRect.top + rect.height / 2
+        };
+    }
+
+    async function startAutoCursorSequence() {
+        const cursor = document.getElementById('virtualCursor');
+        const userInput = document.getElementById('usernameInput');
+        const passInput = document.getElementById('passwordInput');
+        const eyeBtn = document.getElementById('eyeToggle');
+        const camera = document.getElementById('cameraViewport');
+
+        cursor.classList.add('active');
+
+        camera.classList.remove('focus-left');
+        camera.classList.add('zoom-login');
+
+        await sleep(1000);
+
+        let targetPos = getRelativeCenterPosition(userInput);
+
+        cursor.style.transition = 'left 1.8s cubic-bezier(0.25, 1, 0.5, 1), top 1.8s cubic-bezier(0.25, 1, 0.5, 1)';
+        cursor.style.left = targetPos.x + 'px';
+        cursor.style.top = targetPos.y + 'px';
+
+        await sleep(1800);
+
+        clickEffect(cursor);
+        userInput.focus();
+        await sleep(200);
+
+        await eraseText(userInput, 70);
+        await sleep(200);
+        await typeText(userInput, "NguyenThiLanHuong", 100);
+        await sleep(400);
+
+        targetPos = getRelativeCenterPosition(passInput);
+
+        cursor.style.transition = 'left 0.7s ease, top 0.7s ease';
+        cursor.style.left = targetPos.x + 'px';
+        cursor.style.top = targetPos.y + 'px';
+
+        await sleep(700);
+
+        clickEffect(cursor);
+        passInput.focus();
+        await sleep(200);
+
+        await eraseText(passInput, 70);
+        await sleep(300);
+
+        if (passInput.type === 'password') {
+            targetPos = getRelativeCenterPosition(eyeBtn);
+
+            cursor.style.transition = 'left 0.5s ease, top 0.5s ease';
+            cursor.style.left = targetPos.x + 'px';
+            cursor.style.top = targetPos.y + 'px';
+
+            await sleep(500);
+
+            clickEffect(cursor);
+            togglePasswordVisibility();
+            await sleep(300);
+
+            targetPos = getRelativeCenterPosition(passInput);
+            cursor.style.left = targetPos.x + 'px';
+            cursor.style.top = targetPos.y + 'px';
+            await sleep(350);
+        }
+
+        passInput.focus();
+        await typeText(passInput, "AnhYeuEm", 120);
+
+        await sleep(500);
+        
+        userInput.readOnly = true;
+        passInput.readOnly = true;
+        userInput.style.pointerEvents = 'none';
+        passInput.style.pointerEvents = 'none';
+        
+        document.getElementById('eyeToggle').style.pointerEvents = 'none';
+        document.getElementById('forgotLink').style.pointerEvents = 'none';
+        document.getElementById('forgotLink').style.opacity = '0.5';
+
+        document.getElementById('cardLogin').classList.remove('disabled-input');
+    }
+
+    function eraseText(inputElem, speed) {
+        return new Promise((resolve) => {
+            if (!inputElem.value) {
+                resolve();
+                return;
+            }
+            const timer = setInterval(() => {
+                inputElem.value = inputElem.value.substring(0, inputElem.value.length - 1);
+                if (inputElem.value.length === 0) {
+                    clearInterval(timer);
+                    resolve();
+                }
+            }, speed);
+        });
+    }
+
+    function typeText(inputElem, text, speed) {
+        return new Promise((resolve) => {
+            let index = 0;
+            const timer = setInterval(() => {
+                inputElem.value += text[index];
+                index++;
+                if (index >= text.length) {
+                    clearInterval(timer);
+                    resolve();
+                }
+            }, speed);
+        });
+    }
+
+    function clickEffect(cursorElem) {
+        cursorElem.classList.add('click-anim');
+        setTimeout(() => cursorElem.classList.remove('click-anim'), 120);
+    }
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+  </script>
+</body>
+</html>
